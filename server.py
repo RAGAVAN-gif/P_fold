@@ -70,7 +70,7 @@ def handle_client(client):
             name = names[index]
             names.remove(name)
 
-            broadcast(f"{name} left the chat".encode())
+            broadcast(f"🔔 {name} left the chat".encode())
             client.close()
             break
 
@@ -90,7 +90,7 @@ while True:
 
     print(name, "joined the chat")
 
-    broadcast(f"{name} joined the chat".encode())
+    broadcast(f"🔔 {name} joined the chat".encode())
 
     thread = threading.Thread(target=handle_client, args=(client,))
     thread.start()

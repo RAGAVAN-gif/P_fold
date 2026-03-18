@@ -1,3 +1,5 @@
+from colorama import Fore, init
+init()
 import socket
 import threading
 
@@ -14,7 +16,14 @@ def receive():
             if message == "NAME":
                 client.send(name.encode())
             else:
-                print(message)
+                if "(Private)" in message:
+                    print(Fore.MAGENTA + message)
+                elif "joined the chat" in message:
+                    print(Fore.GREEN + message)
+                elif "left the chat" in message:
+                    print(Fore.RED + message)
+                else:
+                    print(Fore.WHITE + message)
         except:
             break
 
