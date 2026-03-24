@@ -21,8 +21,31 @@ def handle_client(client):
         try:
             message = client.recv(1024).decode()
 
+            if message.startswith("FILE|"):
+                parts = message.split("|", 2)
 
-            if message == "/help":
+                filename = parts[1]
+                filedata = parts[2].encode()
+
+                sender_index = clients.index(client)
+                sender_name = names[sender_index]
+
+                for c in clients:
+                    if c != client:
+                        c.send(f"FILE|{sender_name}|{filename}|".encode() + filedata)
+
+                continue
+
+            if message == "TYPING":
+                sender_index = clients.index(client)
+                sender_name = names[sender_index]
+
+                for c in clients:
+                    if c != client:
+                        c.send(f"{sender_name} is typing...".encode())
+                continue
+
+            elif message == "/help":
                 help_text = """
                 Commands:
                /online  - show online users
@@ -32,13 +55,18 @@ def handle_client(client):
                 client.send(help_text.encode())
 
             # show online users
-            if message == "/online":
+            elif message == "/online":
                 online_list = ", ".join(names)
                 client.send(f"Online users: {online_list}".encode())
 
             # private message
             elif message.startswith("@"):
                 parts = message.split(" ", 1)
+
+                if len(parts) < 2:
+                    client.send("Invalid private message. Use: @name message".encode())
+                    continue
+
                 target_name = parts[0][1:]
                 private_msg = parts[1]
 
@@ -50,8 +78,10 @@ def handle_client(client):
                     sender_name = names[sender_index]
 
                     target_client.send(
-                        f"(Private) {sender_name}: {private_msg}".encode()
-                    )
+                    f"(Private) {sender_name}: {private_msg}".encode())
+                    
+                else:
+                    client.send("User not found".encode())  
 
             # group chat
             else:
@@ -65,12 +95,14 @@ def handle_client(client):
                 broadcast(message.encode())
 
         except:
-            index = clients.index(client)
-            clients.remove(client)
-            name = names[index]
-            names.remove(name)
+            if client in clients:
+                index = clients.index(client)
+                clients.remove(client)
+                name = names[index]
+                names.remove(name)
 
-            broadcast(f"🔔 {name} left the chat".encode())
+                broadcast(f"🔔 {name} left the chat".encode())
+
             client.close()
             break
 
@@ -78,7 +110,7 @@ while True:
     client, address = server.accept()
     print("Connected:", address)
 
-    client.send("NAME".encode())
+    client.send("NAME" .encode())
     name = client.recv(1024).decode()
 
     names.append(name)
